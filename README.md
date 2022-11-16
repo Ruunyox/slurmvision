@@ -2,7 +2,8 @@
 
 ---
 
-Simple tool for browsing, inspecting, canceling SLURM jobs.
+Simple tool for browsing, inspecting, canceling SLURM jobs. Greatly inspired by
+mil-ad's [stui](https://github.com/mil-ad/stui).
 
 ## Install
 
