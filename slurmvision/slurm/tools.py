@@ -91,7 +91,7 @@ class Inspector(object):
 
         if detail_formopts == None:
             self.detail_formopts = {
-                "-O": f"JobId,UserName,Name:{MAX_CHAR},STATE,Reason,Nodes,NumCPUs,cpus-per-task,TimeUsed,TimeLeft,SubmitTime,StartTime,STDOUT,WorkDir"
+                "-O": f"JobId:{MAX_CHAR},UserName:{MAX_CHAR},Name:{MAX_CHAR},STATE:{MAX_CHAR},Reason:{MAX_CHAR},Nodes:{MAX_CHAR},NumCPUs:{MAX_CHAR},cpus-per-task:{MAX_CHAR},Partition::{MAX_CHAR},TimeUsed:{MAX_CHAR},TimeLeft:{MAX_CHAR},SubmitTime:{MAX_CHAR},StartTime:{MAX_CHAR},STDOUT:{MAX_CHAR},WorkDir:{MAX_CHAR}"
             }
         else:
             assert len(detail_formopts) == 1
