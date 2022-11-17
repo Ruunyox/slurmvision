@@ -17,6 +17,9 @@ class Tui(object):
     inspector:
         `Inspector` instance that handles SQUEUE/SINFO query
         and storage.
+    select_advance:
+        If True, the cursor for the job list is advanced forward
+        automatically when a (de)selection is performed.
     """
 
     _palette = [
@@ -52,13 +55,14 @@ class Tui(object):
         "tlcorner": "\N{BOX DRAWINGS DOWN SINGLE AND RIGHT DOUBLE}",
     }
 
-    def __init__(self, inspector):
+    def __init__(self, inspector: Inspector, select_advance: bool = True):
         self.inspector = inspector
         self.inspector.get_jobs()
         self.selected_jobs = set()
         self.view = "squeue"
         self.filter_str = ""
         self.top = self._create_top()
+        self.select_advance = select_advance
         self.loop = urwid.MainLoop(
             self.top, palette=Tui._palette, unhandled_input=self._handle_input
         )
@@ -526,17 +530,19 @@ class Tui(object):
                 f"[{len(self.selected_jobs)}] Selected"
             )
             col.set_attr_map({None: "selected"})
-            original_focus = self.top.body.original_widget.body.focus
-            self.top.body.original_widget.set_focus(
-                (original_focus + 1) % len(self.top.body.original_widget.body)
-            )
+            if self.select_advance:
+                original_focus = self.top.body.original_widget.body.focus
+                self.top.body.original_widget.set_focus(
+                    (original_focus + 1) % len(self.top.body.original_widget.body)
+                )
         else:
             self.selected_jobs.remove(col.original_widget.job_id)
             self.top.footer.original_widget.original_widget[2].set_text(
                 f"[{len(self.selected_jobs)}] Selected"
             )
             col.set_attr_map({None: None})
-            original_focus = self.top.body.original_widget.body.focus
-            self.top.body.original_widget.set_focus(
-                (original_focus + 1) % len(self.top.body.original_widget.body)
-            )
+            if self.select_advance:
+                original_focus = self.top.body.original_widget.body.focus
+                self.top.body.original_widget.set_focus(
+                    (original_focus + 1) % len(self.top.body.original_widget.body)
+                )

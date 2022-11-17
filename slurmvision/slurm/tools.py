@@ -95,7 +95,7 @@ class Inspector(object):
             }
         else:
             assert len(detail_formopts) == 1
-            self.detail_formopts
+            self.detail_formopts = detail_formopts
 
         self.jobs = []
         self.squeue_header = None
