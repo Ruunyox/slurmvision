@@ -48,6 +48,11 @@ class Inspector(object):
         Single entry dictionary with the key -o/--format and the value
         specifying valid SINFO formatting options. See
         https://slurm.schedmd.com/sinfo.html for more information.
+    detail_formopts:
+        Single entry dictionary with the key -O/--Format and the value
+        specifying valid SQUEUE extended formatting options. See
+        https://slurm.schedmd.com/squeue.html for more information. For
+        use in inspecting single, specifc jobs.
     """
 
     def __init__(
@@ -57,6 +62,7 @@ class Inspector(object):
         squeue_formopts: Optional[Dict[str, str]] = None,
         sinfo_getopts: Optional[Dict[str, str]] = None,
         sinfo_formopts: Optional[Dict[str, str]] = None,
+        detail_formopts: Optional[Dict[str, str]] = None,
     ):
         self.polling_interval = polling_interval
         if squeue_getopts != None:
@@ -83,12 +89,22 @@ class Inspector(object):
             assert len(sinfo_formopts) == 1
             self.sinfo_formopts = sinfo_formopts
 
+        if detail_formopts == None:
+            self.detail_formopts = {
+                "-O": f"JobId,UserName,Name:{MAX_CHAR},STATE,Reason,Nodes,NumCPUs,cpus-per-task,TimeUsed,TimeLeft,SubmitTime,StartTime,STDOUT,WorkDir"
+            }
+        else:
+            assert len(detail_formopts) == 1
+            self.detail_formopts
+
         self.jobs = []
         self.squeue_header = None
         self.sinfo = []
         self.sinfo_header = None
         self.get_info()
         self.user = os.environ["USER"]
+        self.detail_info = None
+        self.detail_info_header = None
 
     def toggle_user_filter(self, *args):
         """Toggles filtering of user-only jobs"""
@@ -215,6 +231,25 @@ class Inspector(object):
         cmd_output = subprocess.run(sinfo_cmd, capture_output=True)
         sinfo_output = cmd_output.stdout.decode("utf-8")
         self.sinfo, self.sinfo_header = Inspector.parse_sinfo_output(sinfo_output)
+
+    def get_job_details(self, job_id: str) -> Job:
+        """Get detailed information for a single specific job to store
+        in the job_info attribute according to the job_formopts specifications
+
+        Parameters
+        ----------
+        job_id:
+            String of the numerical SLURM job ID for which detailed information
+            has been requested
+        """
+
+        detail_cmd = Inspector.build_s_cmd(
+            "squeue", {"-j": job_id}, self.detail_formopts
+        )
+        cmd_output = subprocess.run(detail_cmd, capture_output=True)
+        detail_output = cmd_output.stdout.decode("utf-8")
+        detail_info, _ = Inspector.parse_squeue_output(detail_output)
+        return detail_info[0]
 
     def cancel_job(self, job_id: str) -> subprocess.CompletedProcess:
         """Calls SCANCEL on the specified job ID.

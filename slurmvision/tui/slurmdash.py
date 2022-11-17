@@ -27,6 +27,7 @@ class Tui(object):
         ("selected", "dark red", ""),
         ("warning", "white", "dark red"),
         ("help", "black", "yellow"),
+        ("detail", "black", "white"),
         ("error", "dark red", "white"),
         ("focus", "dark blue", ""),
     ]
@@ -38,6 +39,7 @@ class Tui(object):
         "i     ->   View SINFO output",
         "j     ->   View jobs",
         "c     ->   Deselect all currently selected jobs",
+        "d     ->   Detailed view of currently highlighted job",
         "/     ->   Global search",
         "bksp  ->   Cancel selected jobs",
         "tab   ->   Refocus to job panel",
@@ -90,6 +92,9 @@ class Tui(object):
         if key in ("C", "c"):
             if self.view == "squeue":
                 self._deselect_check()
+        if key in ("D", "d"):
+            if self.view == "squeue":
+                self._inspect_detail()
         if key == "/":
             if self.view == "squeue":
                 self._enter_search()
@@ -101,6 +106,13 @@ class Tui(object):
             self.top.focus_position = "body"
         if key in ("H", "h"):
             self._help_box()
+
+    def _inspect_detail(self):
+        current_focus = self.top.body.original_widget.body.focus
+        row = self.top.body.original_widget.body[current_focus]
+        job_id = row.original_widget.job_id
+        detail_info = self.inspector.get_job_details(job_id)
+        self._info_box(detail_info.attrs)
 
     def _scancel_check(self):
         self._yes_no_prompt(
@@ -187,7 +199,39 @@ class Tui(object):
             align="center",
             width=("relative", 60),
             valign="middle",
-            height=("relative", 60),
+            height=len(help_text) + 4,
+        )
+        self.loop.widget = w
+
+    def _info_box(self, str_pairs: Dict):
+        """Displays an information box given a mapping of attributes
+        and descriptions
+        """
+
+        ok = urwid.Button("OK")
+        urwid.connect_signal(ok, "click", self._return_to_top)
+
+        infos = []
+        for key, value in str_pairs.items():
+            infos.append(urwid.Padding(urwid.Text(f"{key} : {value}"), right=3, left=3))
+
+        info_walker = urwid.SimpleListWalker(infos)
+        info_list = urwid.BoxAdapter(urwid.ListBox(info_walker), height=len(infos))
+        info_pile = urwid.Pile([info_list, urwid.Divider(), ok])
+
+        info_box = urwid.AttrMap(
+            urwid.LineBox(info_pile, title="Job Detail", **Tui._box_style_kwargs),
+            "detail",
+            None,
+        )
+
+        w = urwid.Overlay(
+            urwid.AttrMap(urwid.Filler(info_box), "detail", None),
+            self.top,
+            align="center",
+            width=("relative", 60),
+            valign="middle",
+            height=len(infos) + 4,
         )
         self.loop.widget = w
 
