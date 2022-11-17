@@ -23,7 +23,7 @@ Press `h` for information on controls.
 
 ## Configuration
 
-A user-specific YAML file of configuration options can be read from `$HOME/.config/slurmvision.yaml` or the `--config` CLI argument can be used to specify a config file elsewhere. A sample configuration file is shown here:
+A user-specific YAML file of configuration options can be read from `$HOME/.config/slurmvision.yml` or the `--config` CLI argument can be used to specify a config file elsewhere. A sample configuration file is shown here:
 
 ```
 squeue_opts:
