@@ -37,7 +37,7 @@ def main():
         default_config_dir = os.path.join(os.environ["HOME"], ".config/slurmvision.yml")
         try:
             with open(default_config_dir, "r") as yfile:
-                config = yaml.load(file)
+                config = yaml.load(yfile)
         except:
             print(
                 f"Unable to load user config at {default_config_dir}. Proceeding with default options..."
