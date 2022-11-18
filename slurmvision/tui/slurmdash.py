@@ -20,13 +20,15 @@ class Tui(object):
     select_advance:
         If True, the cursor for the job list is advanced forward
         automatically when a (de)selection is performed.
+    my_jobs_first:
+        If True, slurmvision will start with "My Jobs" toggled ON.
+        Useful if you are working with a big/busy cluster.
     """
 
     _palette = [
         ("standard", "", ""),
         ("header", "brown", ""),
         ("footer", "brown", ""),
-        ("lines", "black", ""),
         ("selected", "dark red", ""),
         ("warning", "white", "dark red"),
         ("help", "black", "yellow"),
@@ -36,17 +38,17 @@ class Tui(object):
     ]
 
     _help_strs = [
-        "space ->   Select/deselect jobs",
-        "m     ->   Toggle user jobs",
-        "r     ->   Toggle running jobs",
-        "i     ->   View SINFO output",
-        "j     ->   View jobs",
-        "c     ->   Deselect all currently selected jobs",
-        "d     ->   Detailed view of currently highlighted job",
-        "/     ->   Global search",
-        "bksp  ->   Cancel selected jobs",
-        "tab   ->   Refocus to job panel",
-        "q     ->   Quit",
+        "space/enter ->   Select/deselect jobs",
+        "m           ->   Toggle user jobs",
+        "r           ->   Toggle running jobs",
+        "i           ->   View SINFO output",
+        "j           ->   View jobs",
+        "c           ->   Deselect all currently selected jobs",
+        "d           ->   Detailed view of currently highlighted job",
+        "/           ->   Global search",
+        "bksp        ->   Cancel selected jobs",
+        "tab         ->   Refocus to job panel",
+        "q           ->   Quit",
     ]
 
     _box_style_kwargs = {
@@ -55,10 +57,18 @@ class Tui(object):
         "tlcorner": "\N{BOX DRAWINGS DOWN SINGLE AND RIGHT DOUBLE}",
     }
 
-    def __init__(self, inspector: Inspector, select_advance: bool = True):
+    def __init__(
+        self,
+        inspector: Inspector,
+        select_advance: bool = True,
+        my_jobs_first: bool = False,
+    ):
         self.inspector = inspector
-        self.inspector.get_jobs()
         self.selected_jobs = set()
+        self.my_jobs_first = my_jobs_first
+        if self.my_jobs_first:
+            self.inspector.toggle_user_filter()
+        self.inspector.get_jobs()
         self.view = "squeue"
         self.filter_str = ""
         self.top = self._create_top()
@@ -262,7 +272,7 @@ class Tui(object):
             align="center",
             width=("relative", 60),
             valign="middle",
-            height=("relative", 60),
+            height=6,
         )
         self.loop.widget = w
 
@@ -302,7 +312,7 @@ class Tui(object):
             align="center",
             width=("relative", 30),
             valign="middle",
-            height=("relative", 30),
+            height=6,
         )
         self.loop.widget = w
 
@@ -381,7 +391,11 @@ class Tui(object):
         """
 
         my_jobs = urwid.Padding(
-            urwid.CheckBox("My Jobs", state=False, has_mixed=False), right=2, left=2
+            urwid.CheckBox(
+                "My Jobs", state=True if self.my_jobs_first else False, has_mixed=False
+            ),
+            right=2,
+            left=2,
         )
         urwid.connect_signal(
             my_jobs.original_widget, "change", self.inspector.toggle_user_filter

@@ -7,8 +7,6 @@ mil-ad's [stui](https://github.com/mil-ad/stui).
 
 ## Install
 
-Urwid and python >= 3.6 
-
 ```
 git clone https://github.com/ruunyox/slurmvision
 cd slurmvision
@@ -19,7 +17,7 @@ pip3 install .
 
 `slurmvision --help`
 
-Press `h` for information on controls.
+Press `h` for information on controls while running.
 
 ## Configuration
 
@@ -39,6 +37,7 @@ detail_opts:
   formopts:
     "--Format": "JobId:256,UserName:256,Name:256,STATE:256,Reason:256,Nodes:256,NumCPUs:256,cpus-per-task:256,Partition:256,TimeUsed:256,TimeLeft:256,SubmitTime:256,StartTime:256,STDOUT:256,WorkDir:256"
 tui_opts:
-  select_advance: false
+  select_advance: true
+  my_jobs_first: true
 ```
 

@@ -60,7 +60,7 @@ def main():
                     "--Format": "JobId:256,UserName:256,Name:256,STATE:256,Reason:256,Nodes:256,NumCPUs:256,cpus-per-task:256,Partition:256,TimeUsed:256,TimeLeft:256,SubmitTime:256,StartTime:256,STDOUT:256,WorkDir:256"
                 }
             }
-            config["tui_opts"] = {"select_advance": True}
+            config["tui_opts"] = {"select_advance": True, "my_jobs_first": True}
 
     inspector = Inspector(
         polling_interval=config["squeue_opts"]["polling_interval"],
