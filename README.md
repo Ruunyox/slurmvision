@@ -5,7 +5,7 @@
 Simple tool for browsing, inspecting, canceling SLURM jobs. Greatly inspired by
 mil-ad's [stui](https://github.com/mil-ad/stui). Please be aware of your cluster's rules (if any) concerning
 'squeue'/'sinfo' polling request frequency. Currently a minimum of 10 seconds for a polling interval
-is enforced by default. If you wish to modify this software to poll more frequently, do so at your own risk (per the license)
+is suggested by default. If you wish to poll more frequently, do so at your own risk (per the license)
 and/or after consultation with your cluster admin(s). Enjoy!
 
 ## Install
