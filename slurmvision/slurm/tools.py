@@ -4,6 +4,7 @@ import json
 from threading import Thread, Event
 from time import sleep
 import os
+import warnings
 
 MAX_CHAR = 256
 
@@ -66,12 +67,13 @@ class Inspector(object):
         sinfo_formopts: Optional[Dict[str, str]] = None,
         detail_formopts: Optional[Dict[str, str]] = None,
     ):
+
         if polling_interval < 10:
-            raise ValueError(
-                f"The requested polling rate, {polling_interval} s, for SQUEUE/SINFO is too low. Please use 10 s or more (or at least double check with your cluster admins)"
+            warnings.warn(
+                f"\n\nWARNING: your current polling_interval, {polling_interval} seconds, may be a bit low depending on your cluster's setup and typical usage. Use a higher polling rate at your own risk or clear it with your cluster admins. Remember that you can manually refresh the SQUEUE/SINFO output using the 'p' keystroke in the TUI.\n\nStarting TUI in 5 s... "
             )
-        else:
-            self.polling_interval = polling_interval
+            sleep(5)
+        self.polling_interval = polling_interval
         if squeue_getopts != None:
             self.squeue_getopts = squeue_getopts
         else:
