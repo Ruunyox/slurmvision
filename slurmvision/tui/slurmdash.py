@@ -164,12 +164,6 @@ class Tui(object):
     def _return_to_top(self, *args):
         self.loop.widget = self.top
 
-    def _force_refresh(self):
-        if self.view == "squeue":
-            self.inspector.get_jobs()
-        if self.view == "sinfo":
-            self.inspector.get_info()
-
     def _toggle_my_jobs(self):
         self.top.footer.original_widget.original_widget[0].toggle_state()
 
