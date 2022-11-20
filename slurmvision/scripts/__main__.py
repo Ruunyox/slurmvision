@@ -47,7 +47,7 @@ def main():
             outer_keys = ["squeue_opts", "sinfo_opts", "detail_opts", "tui_opts"]
             config = {outer_key: {} for outer_key in outer_keys}
             config["squeue_opts"] = {
-                "polling_interval": 1,
+                "polling_interval": 10,
                 "getopts": None,
                 "formopts": {
                     "--Format": "JobId,UserName,Name:256,STATE,ReasonList,TimeUsed"
