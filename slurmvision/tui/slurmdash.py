@@ -114,6 +114,7 @@ class Tui(object):
                 self.inspector.get_jobs()
             if self.view == "sinfo":
                 self.inspector.get_info()
+            self.loop.remove_alarm(self.handle)
             self.update_top()
         if key in ("D", "d"):
             if self.view == "squeue":
