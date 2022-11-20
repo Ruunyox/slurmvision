@@ -97,7 +97,6 @@ class Tui(object):
     def _handle_input(self, key: str):
         """Handles general keyboard input during the TUI loop"""
         if key in ("Q", "q"):
-            self._quit_message()
             self._urwid_quit()
         if key in ("J", "j"):
             self._set_view("squeue")
@@ -137,9 +136,6 @@ class Tui(object):
         job_id = row.original_widget.job_id
         detail_info = self.inspector.get_job_details(job_id)
         self._info_box(detail_info.attrs)
-
-    def _quit_message(self):
-        self._info_box({"Quitting": "Closing threads ..."})
 
     def _scancel_check(self):
         self._yes_no_prompt(
