@@ -25,7 +25,7 @@ A user-specific YAML file of configuration options can be read from `$HOME/.conf
 
 ```
 squeue_opts:
-  polling_interval: 1
+  polling_interval: 10
   getopts: null
   formopts:
     "--Format": "JobId,UserName,Name:256,STATE,ReasonList,TimeUsed"

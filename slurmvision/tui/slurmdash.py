@@ -41,6 +41,7 @@ class Tui(object):
         "space/enter ->   Select/deselect jobs",
         "m           ->   Toggle user jobs",
         "r           ->   Toggle running jobs",
+        "p           ->   Manual SQUEUE/SINFO poll",
         "i           ->   View SINFO output",
         "j           ->   View jobs",
         "c           ->   Deselect all currently selected jobs",
@@ -76,7 +77,7 @@ class Tui(object):
         self.loop = urwid.MainLoop(
             self.top, palette=Tui._palette, unhandled_input=self._handle_input
         )
-        self.loop.set_alarm_in(
+        self.handle = self.loop.set_alarm_in(
             sec=self.inspector.polling_interval, callback=self.update_top
         )
 
@@ -89,11 +90,14 @@ class Tui(object):
     def _urwid_quit(self, *args):
         """Deconstructs the TUI and quits the program"""
         self.poll_thread.join()
+        self.loop.remove_alarm(self.handle)
         raise urwid.ExitMainLoop()
+        print("Polling thread closing... either wait or CTRL-C.")
 
     def _handle_input(self, key: str):
         """Handles general keyboard input during the TUI loop"""
         if key in ("Q", "q"):
+            self._quit_message()
             self._urwid_quit()
         if key in ("J", "j"):
             self._set_view("squeue")
@@ -106,6 +110,12 @@ class Tui(object):
         if key in ("C", "c"):
             if self.view == "squeue":
                 self._deselect_check()
+        if key in ("P", "p"):
+            if self.view == "squeue":
+                self.inspector.get_jobs()
+            if self.view == "sinfo":
+                self.inspector.get_info()
+            self.update_top()
         if key in ("D", "d"):
             if self.view == "squeue":
                 self._inspect_detail()
@@ -127,6 +137,9 @@ class Tui(object):
         job_id = row.original_widget.job_id
         detail_info = self.inspector.get_job_details(job_id)
         self._info_box(detail_info.attrs)
+
+    def _quit_message(self):
+        self._info_box({"Quitting": "Closing threads ..."})
 
     def _scancel_check(self):
         self._yes_no_prompt(
@@ -523,7 +536,9 @@ class Tui(object):
         according to the inspector's polling interval
         """
         self.draw_body()
-        self.loop.set_alarm_in(self.inspector.polling_interval, self.update_top)
+        self.handle = self.loop.set_alarm_in(
+            self.inspector.polling_interval, self.update_top
+        )
 
     def _toggle_selected(self, col: SelectableColumns, *args):
         """Toggles the job under the cursor to be added/removed

@@ -6,6 +6,8 @@ from slurmvision.slurm import Inspector
 import argparse
 from ruamel.yaml import YAML
 import os
+import warnings
+from time import sleep
 
 
 def parse_arguments():
@@ -70,6 +72,11 @@ def main():
         sinfo_formopts=config["sinfo_opts"]["formopts"],
         detail_formopts=config["detail_opts"]["formopts"],
     )
+    if inspector.polling_interval < 10:
+        warnings.warn(
+            f"\n\nWARNING: your current polling_interval, {inspector.polling_interval} seconds, may be a bit high depending on your cluster's setup and typical usage. Use a higher polling rate at your own risk or clear it with your cluster admins. Remember that you can manually refresh the SQUEUE/SINFO output using the 'p' keystroke in the TUI.\n\nStarting TUI... "
+        )
+        sleep(10)
     tui = Tui(inspector, **config["tui_opts"])
     tui.start()
 

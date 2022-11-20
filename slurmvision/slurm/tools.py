@@ -33,7 +33,9 @@ class Inspector(object):
     Parameters
     ----------
     polling_interval:
-        Number of seconds to wait in between each SQUEUE subprocess call
+        Number of seconds to wait in between each SQUEUE subprocess call.
+        Please set to at least 10 seconds (or your cluster managers may get
+        mad at you :) )
     squeue_getopts:
         Dictionary of flag/argument key/value pairs for use with SQUEUE.
         See https://slurm.schedmd.com/squeue.html for more information.
@@ -57,14 +59,19 @@ class Inspector(object):
 
     def __init__(
         self,
-        polling_interval: float = 1,
+        polling_interval: float = 10,
         squeue_getopts: Optional[Dict[str, str]] = None,
         squeue_formopts: Optional[Dict[str, str]] = None,
         sinfo_getopts: Optional[Dict[str, str]] = None,
         sinfo_formopts: Optional[Dict[str, str]] = None,
         detail_formopts: Optional[Dict[str, str]] = None,
     ):
-        self.polling_interval = polling_interval
+        if polling_interval < 10:
+            raise ValueError(
+                f"The requested polling rate, {polling_interval} s, for SQUEUE/SINFO is too low. Please use 10 s or more (or at least double check with your cluster admins)"
+            )
+        else:
+            self.polling_interval = polling_interval
         if squeue_getopts != None:
             self.squeue_getopts = squeue_getopts
         else:
@@ -284,14 +291,20 @@ class SlurmThread(Thread):
         Thread.__init__(self)
         self.stop_event = Event()
         self.inspector = inspector
+        self.event_check_interval = 1
 
     def run(self):
         """Main thread polling loop. Sleeps after each poll, as
         specified by the inspector.polling_interval attribute
         """
+        counts = 1
         while not self.stop_event.isSet():
-            self.inspector.get_jobs()
-            sleep(self.inspector.polling_interval)
+            if (self.inspector.polling_interval) / counts < 1.0:
+                self.inspector.get_jobs()
+                counts = 1
+                continue
+            sleep(self.event_check_interval)
+            counts = counts + 1
 
     def join(self, timeout: Union[int, None] = None):
         """Safely request thread to end
