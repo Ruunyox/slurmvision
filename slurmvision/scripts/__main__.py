@@ -63,6 +63,9 @@ def main():
             }
             config["tui_opts"] = {"select_advance": True, "my_jobs_first": True}
 
+    if "palette" not in list(config["tui_opts"].keys()):
+        config["tui_opts"]["palette"] = None
+
     inspector = Inspector(
         polling_interval=config["squeue_opts"]["polling_interval"],
         squeue_getopts=config["squeue_opts"]["getopts"],

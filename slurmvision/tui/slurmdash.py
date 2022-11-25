@@ -6,6 +6,18 @@ import os
 from .widgets import SelectableColumns
 from ..slurm import Inspector, SlurmThread
 
+default_palette = {
+    "standard": ("standard", "", ""),
+    "header": ("header", "brown", ""),
+    "footer": ("footer", "brown", ""),
+    "selected": ("selected", "dark red", ""),
+    "warning": ("warning", "white", "dark red"),
+    "help": ("help", "black", "yellow"),
+    "detail": ("detail", "black", "white"),
+    "error": ("error", "dark red", "white"),
+    "focus": ("focus", "dark blue", ""),
+}
+
 
 class Tui(object):
     """SlurmVision urwid-based Text-user interface for
@@ -24,18 +36,6 @@ class Tui(object):
         If True, slurmvision will start with "My Jobs" toggled ON.
         Useful if you are working with a big/busy cluster.
     """
-
-    _palette = [
-        ("standard", "", ""),
-        ("header", "brown", ""),
-        ("footer", "brown", ""),
-        ("selected", "dark red", ""),
-        ("warning", "white", "dark red"),
-        ("help", "black", "yellow"),
-        ("detail", "black", "white"),
-        ("error", "dark red", "white"),
-        ("focus", "dark blue", ""),
-    ]
 
     _help_strs = [
         "space/enter ->   Select/deselect jobs",
@@ -63,19 +63,32 @@ class Tui(object):
         inspector: Inspector,
         select_advance: bool = True,
         my_jobs_first: bool = False,
+        palette: Optional[List[List[str]]] = None,
     ):
+        if palette:
+            defined_items = set([color_opt[0] for color_opt in palette])
+            full_items = set(default_palette.keys())
+            undefined_items = full_items - defined_items
+            for ui in undefined_items:
+                palette.append(default_palette[ui])
+            self.palette = palette
+        else:
+            self.palette = [val for val in default_palette.values()]
+
         self.inspector = inspector
         self.selected_jobs = set()
         self.my_jobs_first = my_jobs_first
+
         if self.my_jobs_first:
             self.inspector.toggle_user_filter()
+
         self.inspector.get_jobs()
         self.view = "squeue"
         self.filter_str = ""
         self.top = self._create_top()
         self.select_advance = select_advance
         self.loop = urwid.MainLoop(
-            self.top, palette=Tui._palette, unhandled_input=self._handle_input
+            self.top, palette=self.palette, unhandled_input=self._handle_input
         )
         self.handle = self.loop.set_alarm_in(
             sec=self.inspector.polling_interval, callback=self.update_top
@@ -132,8 +145,8 @@ class Tui(object):
             self._help_box()
 
     def _inspect_detail(self):
-        current_focus = self.top.body.original_widget.body.focus
-        row = self.top.body.original_widget.body[current_focus]
+        current_focus = self.top.body.original_widget.original_widget.body.focus
+        row = self.top.body.original_widget.original_widget.body[current_focus]
         job_id = row.original_widget.job_id
         detail_info = self.inspector.get_job_details(job_id)
         self._info_box(detail_info.attrs)
@@ -172,22 +185,26 @@ class Tui(object):
 
     def _create_top(self) -> urwid.Frame:
         """Creates main urwid.Frame widget"""
-        headstr = urwid.AttrMap(
-            self.build_headstr(self.inspector.squeue_header), "header", None
-        )
-        footstr = urwid.AttrMap(self.build_footstr(), "footer", None)
+        headstr = self.build_headstr(self.inspector.squeue_header)
+        footstr = self.build_footstr()
         jstrs = self.build_squeue_list()
 
         job_list = urwid.SimpleFocusListWalker(jstrs)
         self.list_focus_pos = 0
         job_win = urwid.ListBox(job_list)
         job_linebox = urwid.LineBox(job_win, **Tui._box_style_kwargs)
-        body = job_linebox
+        body = urwid.AttrMap(job_linebox, "standard", None)
 
         top = urwid.Frame(
             body,
-            header=urwid.LineBox(headstr, title="SlurmVision", **Tui._box_style_kwargs),
-            footer=urwid.LineBox(footstr, **Tui._box_style_kwargs),
+            header=urwid.AttrMap(
+                urwid.LineBox(headstr, title="SlurmVision", **Tui._box_style_kwargs),
+                "header",
+                None,
+            ),
+            footer=urwid.AttrMap(
+                urwid.LineBox(footstr, **Tui._box_style_kwargs), "footer", None
+            ),
         )
         return top
 
@@ -212,7 +229,7 @@ class Tui(object):
         )
 
         w = urwid.Overlay(
-            urwid.Filler(help_box),
+            urwid.AttrMap(urwid.Filler(help_box), "standard", None),
             self.top,
             align="center",
             width=("relative", 60),
@@ -244,7 +261,7 @@ class Tui(object):
         )
 
         w = urwid.Overlay(
-            urwid.AttrMap(urwid.Filler(info_box), "detail", None),
+            urwid.AttrMap(urwid.Filler(info_box), "standard", None),
             self.top,
             align="center",
             width=("relative", 60),
@@ -271,7 +288,7 @@ class Tui(object):
         )
 
         w = urwid.Overlay(
-            urwid.Filler(error_box),
+            urwid.AttrMap(urwid.Filler(error_box), "standard", None),
             self.top,
             align="center",
             width=("relative", 60),
@@ -311,7 +328,7 @@ class Tui(object):
         )
 
         w = urwid.Overlay(
-            urwid.Filler(message_box),
+            urwid.AttrMap(urwid.Filler(message_box), "standard", None),
             self.top,
             align="center",
             width=("relative", 30),
@@ -513,14 +530,16 @@ class Tui(object):
         if self.view == "sinfo":
             strs = self.build_sinfo_list()
         if len(strs) == 0:
-            self.top.body.original_widget.body.clear()
+            self.top.body.original_widget.original_widget.body.clear()
         else:
-            original_focus = self.top.body.original_widget.body.focus
+            original_focus = self.top.body.original_widget.original_widget.body.focus
             if original_focus == None:
                 original_focus = 0
-            self.top.body.original_widget.body.clear()
-            self.top.body.original_widget.body.extend(strs)
-            self.top.body.original_widget.body.set_focus(original_focus % len(strs))
+            self.top.body.original_widget.original_widget.body.clear()
+            self.top.body.original_widget.original_widget.body.extend(strs)
+            self.top.body.original_widget.original_widget.body.set_focus(
+                original_focus % len(strs)
+            )
 
     def update_top(self, *args):
         """Updates the TUI and sets an urwid loop alarm to re-draw the TUI
@@ -551,9 +570,12 @@ class Tui(object):
             )
             col.set_attr_map({None: "selected"})
             if self.select_advance:
-                original_focus = self.top.body.original_widget.body.focus
-                self.top.body.original_widget.set_focus(
-                    (original_focus + 1) % len(self.top.body.original_widget.body)
+                original_focus = (
+                    self.top.body.original_widget.original_widget.body.focus
+                )
+                self.top.body.original_widget.original_widget.set_focus(
+                    (original_focus + 1)
+                    % len(self.top.body.original_widget.original_widget.body)
                 )
         else:
             self.selected_jobs.remove(col.original_widget.job_id)
@@ -562,7 +584,10 @@ class Tui(object):
             )
             col.set_attr_map({None: None})
             if self.select_advance:
-                original_focus = self.top.body.original_widget.body.focus
-                self.top.body.original_widget.set_focus(
-                    (original_focus + 1) % len(self.top.body.original_widget.body)
+                original_focus = (
+                    self.top.body.original_widget.original_widget.body.focus
+                )
+                self.top.body.original_widget.original_widget.set_focus(
+                    (original_focus + 1)
+                    % len(self.top.body.original_widget.original_widget.body)
                 )
