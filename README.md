@@ -42,5 +42,59 @@ detail_opts:
 tui_opts:
   select_advance: true
   my_jobs_first: true
+  palette: null
 ```
 
+The user configuration can also specify a specific palette using standard Urwid named colors as a nested list:
+
+```
+# all color specifications are represented by ["name", "fg", "bg"]
+tui_opts:
+  palette:
+    -
+      # Color of job/cluster window
+      - "standard" 
+      - "white"
+      - "dark magenta"
+    -
+      # Color of header window
+      - "header"
+      - "black"
+      - "white"
+    -
+      # Color of footer window
+      - "footer"
+      - "black"
+      - "white"
+    -
+      # Color of jobs that have been selected
+      - "selected"
+      - "dark red"
+      - "dark magenta"
+    -
+      # Color of warning pop-ups
+      - "warning"
+      - "black"
+      - "dark red"
+    -
+      # Color of help messages
+      - "help"
+      - "black"
+      - "yellow"
+    -
+      # Color of detailed job info pop-ups
+      - "detail"
+      - "black"
+      - "white"
+    -
+      # Color of error pop-ups
+      - "error"
+      - "black"
+      - "dark red"
+    -
+      # Color of currently highlighted job
+      - "focus"
+      - "black"
+      - "dark magenta"
+```
+Any unspecified palette options will assume default options.
