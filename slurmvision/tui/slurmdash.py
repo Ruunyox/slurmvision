@@ -35,6 +35,12 @@ class Tui(object):
     my_jobs_first:
         If True, slurmvision will start with "My Jobs" toggled ON.
         Useful if you are working with a big/busy cluster.
+    palette:
+        Nested list of lists/tuples specifying color options for
+        the TUI. See https://urwid.org/manual/displayattributes.html
+        for more information on color/palette options. If None,
+        the default palette is used. If palette options are missing,
+        they will be filled with default color options.
     """
 
     _help_strs = [
@@ -108,7 +114,13 @@ class Tui(object):
         print("Polling thread closing... either wait or CTRL-C.")
 
     def _handle_input(self, key: str):
-        """Handles general keyboard input during the TUI loop"""
+        """Handles general keyboard input during the TUI loop
+
+        Parameters
+        ----------
+        key:
+            String representing the user input
+        """
         if key in ("Q", "q"):
             self._urwid_quit()
         if key in ("J", "j"):
@@ -145,6 +157,7 @@ class Tui(object):
             self._help_box()
 
     def _inspect_detail(self):
+        """Creates a pop-up with detailed job info for the currently highlighted job"""
         current_focus = self.top.body.original_widget.original_widget.body.focus
         row = self.top.body.original_widget.original_widget.body[current_focus]
         job_id = row.original_widget.job_id
@@ -152,6 +165,7 @@ class Tui(object):
         self._info_box(detail_info.attrs)
 
     def _scancel_check(self):
+        """Prompts the user with yes/no prompt to cancel selected jobs"""
         self._yes_no_prompt(
             f"Are you sure you want to cancel {len(self.selected_jobs)} selected job(s)?",
             self.cancel_selected_jobs,
@@ -159,6 +173,7 @@ class Tui(object):
         )
 
     def _deselect_check(self):
+        """Prompts the user with yes/no prompt for clearing current selection"""
         self._yes_no_prompt(
             f"Are you sure you want to clear selection?",
             self.clear_selection,
@@ -166,25 +181,40 @@ class Tui(object):
         )
 
     def _enter_search(self):
+        """Sets the focus on the footer search urwid.EditBox"""
         self.top.focus_position = "footer"
         self.top.footer.original_widget.original_widget.focus_col = 3
 
     def _set_view(self, view: str):
+        """Sets main TUI view"""
+        if view not in ["squeue", "sinfo"]:
+            raise ValueError(f"'{view}' is not a valid TUI view")
         self.view = view
         self.draw_body()
         self.draw_header()
 
     def _return_to_top(self, *args):
+        """Removes any currently overlaid widgets and returns to the TUI urwid.Frame widget"""
         self.loop.widget = self.top
 
     def _toggle_my_jobs(self):
+        """Toggles the user-only job filter in SQUEUE calls"""
         self.top.footer.original_widget.original_widget[0].toggle_state()
 
     def _toggle_running_jobs(self):
+        """Toggles the RUNNING state job filter in SQUEUE calls"""
         self.top.footer.original_widget.original_widget[1].toggle_state()
 
     def _create_top(self) -> urwid.Frame:
-        """Creates main urwid.Frame widget"""
+        """Creates main urwid.Frame widget
+
+        Returns
+        -------
+        top:
+            urwid.Frame instance containing a header for labeling SQUEUE/SINFO
+            output columns, a body for displaying jobs/cluster options
+            and a footer with useful widgets for filtering output.
+        """
         headstr = self.build_headstr(self.inspector.squeue_header)
         footstr = self.build_footstr()
         jstrs = self.build_squeue_list()
@@ -238,9 +268,15 @@ class Tui(object):
         )
         self.loop.widget = w
 
-    def _info_box(self, str_pairs: Dict):
+    def _info_box(self, str_pairs: Dict[str, str]):
         """Displays an information box given a mapping of attributes
         and descriptions
+
+        Parameters
+        ----------
+        str:
+            Dictionary of field/values string pairs concerning
+            specified job detail attributes.
         """
 
         ok = urwid.Button("OK")
@@ -271,7 +307,13 @@ class Tui(object):
         self.loop.widget = w
 
     def _error_box(self, error_msg: str):
-        """Displays a temporary error message"""
+        """Displays a temporary error message
+
+        Parameters
+        ----------
+        error_msg:
+            Error message to be displayed to the user
+        """
         ok = urwid.Button("OK")
         urwid.connect_signal(ok, "click", self._return_to_top)
 

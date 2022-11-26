@@ -250,6 +250,11 @@ class Inspector(object):
         job_id:
             String of the numerical SLURM job ID for which detailed information
             has been requested
+
+        Returns
+        -------
+        detail_info:
+            Job with attributes populated according to specified detail
         """
 
         detail_cmd = Inspector.build_s_cmd(
@@ -296,8 +301,8 @@ class SlurmThread(Thread):
         self.event_check_interval = 1
 
     def run(self):
-        """Main thread polling loop. Sleeps after each poll, as
-        specified by the inspector.polling_interval attribute
+        """Main thread polling loop. Sleeps after each self.event_check_interval,
+        but runs an inspector poll every self.inspector.polling_interval
         """
         counts = 1
         while not self.stop_event.isSet():
