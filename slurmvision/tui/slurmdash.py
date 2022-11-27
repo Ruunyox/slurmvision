@@ -190,8 +190,8 @@ class Tui(object):
         if view not in ["squeue", "sinfo"]:
             raise ValueError(f"'{view}' is not a valid TUI view")
         self.view = view
-        self.draw_body()
         self.draw_header()
+        self.draw_body()
 
     def _return_to_top(self, *args):
         """Removes any currently overlaid widgets and returns to the TUI urwid.Frame widget"""
@@ -563,7 +563,11 @@ class Tui(object):
             headstr = self.build_headstr(self.inspector.squeue_header)
         if self.view == "sinfo":
             headstr = self.build_headstr(self.inspector.sinfo_header)
-        self.top.header.original_widget.original_widget = headstr
+        self.top.header = urwid.AttrMap(
+            urwid.LineBox(headstr, title="SlurmVision", **Tui._box_style_kwargs),
+            "header",
+            None,
+        )
 
     def draw_body(self):
         """Draws current TUI body"""
