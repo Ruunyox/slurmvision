@@ -31,7 +31,7 @@ squeue_opts:
   polling_interval: 10
   getopts: null
   formopts:
-    "--Format": "JobId,UserName,Name:256,STATE,ReasonList,TimeUsed"
+    "--Format": "JobId,UserName,Name:256,STATE,ReasonList:256,TimeUsed"
 sinfo_opts:
   getopts: null
   formopts:
