@@ -90,7 +90,7 @@ class Inspector(object):
             }
         else:
             assert len(squeue_formopts) == 1
-            self.squeue_formopts = squeue_formopts["opts"]
+            self.squeue_formopts = squeue_formopts
 
         if sinfo_formopts == None:
             self.sinfo_formopts = {"-o": "%10P %5c %5a %10l %20G %4D %6t"}
