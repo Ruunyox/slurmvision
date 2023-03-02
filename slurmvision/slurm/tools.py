@@ -41,12 +41,6 @@ class Inspector(object):
         Dictionary of flag/argument key/value pairs for use with SQUEUE.
         See https://slurm.schedmd.com/squeue.html for more information.
     squeue_formopts:
-        nested dictionary of:
-
-        "delimeter" : str
-
-        and
-
         Single entry dictionary with the key -O/--Format and the value
         specifying valid SQUEUE extended formatting options. See
         https://slurm.schedmd.com/squeue.html for more information.
@@ -91,13 +85,11 @@ class Inspector(object):
             self.sinfo_getopts = {}
 
         if squeue_formopts == None:
-            self.squeue_delim = " "
             self.squeue_formopts = {
                 "-O": f"JobId,UserName,Name:{MAX_CHAR},STATE,ReasonList,TimeUsed"
             }
         else:
             assert len(squeue_formopts) == 2
-            self.squeue_delim = squeue_formopts["delimeter"]
             self.squeue_formopts = squeue_formopts["opts"]
 
         if sinfo_formopts == None:
