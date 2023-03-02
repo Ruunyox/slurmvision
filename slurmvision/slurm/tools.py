@@ -41,6 +41,12 @@ class Inspector(object):
         Dictionary of flag/argument key/value pairs for use with SQUEUE.
         See https://slurm.schedmd.com/squeue.html for more information.
     squeue_formopts:
+        nested dictionary of:
+
+        "delimeter" : str
+
+        and
+
         Single entry dictionary with the key -O/--Format and the value
         specifying valid SQUEUE extended formatting options. See
         https://slurm.schedmd.com/squeue.html for more information.
@@ -85,12 +91,14 @@ class Inspector(object):
             self.sinfo_getopts = {}
 
         if squeue_formopts == None:
+            self.squeue_delim = " "
             self.squeue_formopts = {
                 "-O": f"JobId,UserName,Name:{MAX_CHAR},STATE,ReasonList,TimeUsed"
             }
         else:
-            assert len(squeue_formopts) == 1
-            self.squeue_formopts = squeue_formopts
+            assert len(squeue_formopts) == 2
+            self.squeue_delim = squeue_formopts["delimeter"]
+            self.squeue_formopts = squeue_formopts["opts"]
 
         if sinfo_formopts == None:
             self.sinfo_formopts = {"-o": "%10P %5c %5a %10l %20G %4D %6t"}
@@ -151,7 +159,7 @@ class Inspector(object):
         jobs = []
         for line in lines[1:]:
             tokens = line.split()
-            assert len(tokens) = len(header)
+            assert len(tokens) == len(header)
             job = Job({h: t for h, t in zip(header, tokens)})
             jobs.append(job)
         return jobs, header
@@ -179,7 +187,7 @@ class Inspector(object):
         strs = []
         for line in lines[1:]:
             tokens = line.split()
-            assert len(tokens) = len(header)
+            assert len(tokens) == len(header)
             str_ = {h: t for h, t in zip(header, tokens)}
             strs.append(str_)
         return strs, header
