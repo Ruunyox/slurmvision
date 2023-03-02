@@ -89,7 +89,7 @@ class Inspector(object):
                 "-O": f"JobId,UserName,Name:{MAX_CHAR},STATE,ReasonList,TimeUsed"
             }
         else:
-            assert len(squeue_formopts) == 2
+            assert len(squeue_formopts) == 1
             self.squeue_formopts = squeue_formopts["opts"]
 
         if sinfo_formopts == None:
