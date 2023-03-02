@@ -151,6 +151,7 @@ class Inspector(object):
         jobs = []
         for line in lines[1:]:
             tokens = line.split()
+            assert len(tokens) = len(header)
             job = Job({h: t for h, t in zip(header, tokens)})
             jobs.append(job)
         return jobs, header
@@ -178,6 +179,7 @@ class Inspector(object):
         strs = []
         for line in lines[1:]:
             tokens = line.split()
+            assert len(tokens) = len(header)
             str_ = {h: t for h, t in zip(header, tokens)}
             strs.append(str_)
         return strs, header
