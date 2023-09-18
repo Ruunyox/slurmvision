@@ -8,6 +8,9 @@ mil-ad's [stui](https://github.com/mil-ad/stui). Please be aware of your cluster
 is suggested by default. If you wish to poll more frequently, do so at your own risk (per the license)
 and/or after consultation with your cluster admin(s). Enjoy!
 
+![slurmvision-a-tui-for-monitoring-inspecting-and-canceling-v0-c2x03yi3oz0a1](https://github.com/Ruunyox/slurmvision/assets/42926839/701ae6d0-6917-4f54-b59e-2f5330b08803)
+
+
 ## Install
 
 ```
