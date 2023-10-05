@@ -49,7 +49,7 @@ def main():
                 "polling_interval": 10,
                 "getopts": None,
                 "formopts": {
-                    "--Format": "JobId,UserName,Name:256,STATE,ReasonList,TimeUsed"
+                    "--Format": "JobId: ,UserName: ,Name: ,STATE: ,ReasonList: ,TimeUsed: "
                 },
             }
             config["sinfo_opts"] = {
@@ -58,7 +58,7 @@ def main():
             }
             config["detail_opts"] = {
                 "formopts": {
-                    "--Format": "JobId:256,UserName:256,Name:256,STATE:256,Reason:256,Nodes:256,NumCPUs:256,cpus-per-task:256,Partition:256,TimeUsed:256,TimeLeft:256,SubmitTime:256,StartTime:256,STDOUT:256,WorkDir:256"
+                    "--Format": "JobId: ,UserName: ,Name: ,STATE: ,Reason:, Nodes: ,NumCPUs: ,cpus-per-task: ,Partition: ,TimeUsed: ,TimeLeft: ,SubmitTime: ,StartTime: ,STDOUT: ,WorkDir: "
                 }
             }
             config["tui_opts"] = {"select_advance": True, "my_jobs_first": True}
