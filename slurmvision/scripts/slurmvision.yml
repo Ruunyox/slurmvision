@@ -1,5 +1,5 @@
 squeue_opts:
-  polling_interval: 1
+  polling_interval: 10
   getopts: null
   formopts:
     "--Format": "JobId: ,UserName: ,Name: ,STATE: ,ReasonList: ,TimeUsed: "
