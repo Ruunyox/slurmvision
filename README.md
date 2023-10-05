@@ -30,18 +30,20 @@ Press `h` for information on controls while running.
 A user-specific YAML file of configuration options can be read from `$HOME/.config/slurmvision.yml` or the `--config` CLI argument can be used to specify a config file elsewhere. A sample configuration file is shown here:
 
 ```
+delimeter: "|||"
 squeue_opts:
   polling_interval: 10
   getopts: null
   formopts:
-    "--Format": "JobId,UserName,Name:256,STATE,ReasonList:256,TimeUsed"
+    "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,ReasonList:|||,TimeUsed:"
 sinfo_opts:
   getopts: null
   formopts:
     "-o": "%10P %5c %5a %10l %20G %4D %6t"
 detail_opts:
   formopts:
-    "--Format": "JobId:256,UserName:256,Name:256,STATE:256,Reason:256,Nodes:256,NumCPUs:256,cpus-per-task:256,Partition:256,TimeUsed:256,TimeLeft:256,SubmitTime:256,StartTime:256,STDOUT:256,WorkDir:256"
+          "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,Reason:|||,cpus-per- task:|||,Partition:|||,TimeUsed:|||,TimeLeft:|||,SubmitTime:|||,StartTime:|||,STDOUT:|||,WorkDi
+r:|||,ClusterFeature:|||,Feature:|||,GroupName:|||,NumCPUs:|||,NumNodes:|||,NodeList:"
 tui_opts:
   select_advance: true
   my_jobs_first: true
