@@ -56,6 +56,10 @@ class Inspector(object):
         specifying valid SQUEUE extended formatting options. See
         https://slurm.schedmd.com/squeue.html for more information. For
         use in inspecting single, specifc jobs.
+    delimeter:
+        Delimeter string used to separate the feilds of both headers and bodys
+        of SQUEUE, SINFO, and DETAIL call outputs. This one delimeter choice
+        applies to all STDOUT parsing.
     """
 
     def __init__(
@@ -66,8 +70,9 @@ class Inspector(object):
         sinfo_getopts: Optional[Dict[str, str]] = None,
         sinfo_formopts: Optional[Dict[str, str]] = None,
         detail_formopts: Optional[Dict[str, str]] = None,
+        delimeter: Optional[str] = " ",
     ):
-
+        self.delimeter = delimeter
         if polling_interval < 10:
             warnings.warn(
                 f"\n\nWARNING: your current polling_interval, {polling_interval} seconds, may be a bit low depending on your cluster's setup and typical usage. Use a higher polling rate at your own risk or clear it with your cluster admins. Remember that you can manually refresh the SQUEUE/SINFO output using the 'p' keystroke in the TUI.\n\nStarting TUI in 5 s... "
@@ -130,13 +135,16 @@ class Inspector(object):
             del self.squeue_getopts["--state"]
 
     @staticmethod
-    def parse_squeue_output(squeue_output: str) -> Tuple[List[Job], str]:
+    def parse_squeue_output(squeue_output: str, delim: str) -> Tuple[List[Job], str]:
         """Parses SQUEUE output and extracts jobs
 
         Parameters
         ----------
         squeue_output:
             stdout string from SQUEUE subprocess call
+        delim:
+            string delimeter separating fields in the header and body
+            of the SQUEUE call ouput
 
         Returns
         -------
@@ -147,23 +155,28 @@ class Inspector(object):
         """
 
         lines = squeue_output.split("\n")[:-1]  # Final line is a double return
-        header = lines[0].split()
+        header = lines[0].split(delim)
         jobs = []
         for line in lines[1:]:
-            tokens = line.split()
+            tokens = line.split(delim)
             assert len(tokens) == len(header)
             job = Job({h: t for h, t in zip(header, tokens)})
             jobs.append(job)
         return jobs, header
 
     @staticmethod
-    def parse_sinfo_output(sinfo_output: str) -> Tuple[List[Dict[str, str]], str]:
+    def parse_sinfo_output(
+        sinfo_output: str, delim: str
+    ) -> Tuple[List[Dict[str, str]], str]:
         """Parses SINFO output
 
         Parameters
         ----------
         sinfo_output:
             stdout string from SINFO subprocess call
+        delim:
+            string delimeter separating fields in the header and body
+            of the SQUEUE call ouput
 
         Returns
         -------
@@ -175,10 +188,10 @@ class Inspector(object):
         """
 
         lines = sinfo_output.split("\n")[:-1]  # Final line is a double return
-        header = lines[0].split()
+        header = lines[0].split(delim)
         strs = []
         for line in lines[1:]:
-            tokens = line.split()
+            tokens = line.split(delim)
             assert len(tokens) == len(header)
             str_ = {h: t for h, t in zip(header, tokens)}
             strs.append(str_)
@@ -229,7 +242,9 @@ class Inspector(object):
         )
         cmd_output = subprocess.run(squeue_cmd, capture_output=True)
         squeue_output = cmd_output.stdout.decode("utf-8")
-        self.jobs, self.squeue_header = Inspector.parse_squeue_output(squeue_output)
+        self.jobs, self.squeue_header = Inspector.parse_squeue_output(
+            squeue_output, self.delimeter
+        )
 
     def get_info(self):
         """Populated the sinfo and sinfo_header attributes according to
@@ -241,7 +256,9 @@ class Inspector(object):
         )
         cmd_output = subprocess.run(sinfo_cmd, capture_output=True)
         sinfo_output = cmd_output.stdout.decode("utf-8")
-        self.sinfo, self.sinfo_header = Inspector.parse_sinfo_output(sinfo_output)
+        self.sinfo, self.sinfo_header = Inspector.parse_sinfo_output(
+            sinfo_output, self.delimeter
+        )
 
     def get_job_details(self, job_id: str) -> Job:
         """Get detailed information for a single specific job to store
@@ -264,7 +281,7 @@ class Inspector(object):
         )
         cmd_output = subprocess.run(detail_cmd, capture_output=True)
         detail_output = cmd_output.stdout.decode("utf-8")
-        detail_info, _ = Inspector.parse_squeue_output(detail_output)
+        detail_info, _ = Inspector.parse_squeue_output(detail_output, self.delimeter)
         return detail_info[0]
 
     def cancel_job(self, job_id: str) -> subprocess.CompletedProcess:

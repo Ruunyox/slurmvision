@@ -1,14 +1,61 @@
+delimeter: "|||"
 squeue_opts:
-  polling_interval: 1
+  polling_interval: 10
   getopts: null
   formopts:
-    "--Format": "JobId: ,UserName: ,Name: ,STATE: ,ReasonList: ,TimeUsed: "
+    "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,ReasonList:|||,TimeUsed:"
 sinfo_opts:
   getopts: null
   formopts:
     "-o": "%10P %5c %5a %10l %20G %4D %6t"
 detail_opts:
   formopts:
-    "--Format": "JobId: ,UserName: ,Name: ,STATE: ,Reason: ,Nodes: ,NumCPUs: ,cpus-per-task: ,Partition: ,TimeUsed: ,TimeLeft: ,SubmitTime: ,StartTime: ,STDOUT: ,WorkDir: "
+          "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,Reason:|||,cpus-per-task:|||,Partition:|||,TimeUsed:|||,TimeLeft:|||,SubmitTime:|||,StartTime:|||,STDOUT:|||,WorkDir:|||,ClusterFeature:|||,Feature:|||,GroupName:|||,NumCPUs:|||,NumNodes:|||,NodeList:"
 tui_opts:
-  select_advance: false
+  select_advance: true
+  palette:
+    -
+      # Color of job/cluster window
+      - "standard" 
+      - "white"
+      - "dark magenta"
+    -
+      # Color of header window
+      - "header"
+      - "black"
+      - "white"
+    -
+      # Color of footer window
+      - "footer"
+      - "black"
+      - "white"
+    -
+      # Color of jobs that have been selected
+      - "selected"
+      - "dark red"
+      - "dark magenta"
+    -
+      # Color of warning pop-ups
+      - "warning"
+      - "black"
+      - "dark red"
+    -
+      # Color of help messages
+      - "help"
+      - "black"
+      - "yellow"
+    -
+      # Color of detailed job info pop-ups
+      - "detail"
+      - "black"
+      - "white"
+    -
+      # Color of error pop-ups
+      - "error"
+      - "black"
+      - "dark red"
+    -
+      # Color of currently highlighted job
+      - "focus"
+      - "black"
+      - "dark magenta"

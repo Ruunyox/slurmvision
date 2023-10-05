@@ -45,6 +45,7 @@ def main():
             )
             outer_keys = ["squeue_opts", "sinfo_opts", "detail_opts", "tui_opts"]
             config = {outer_key: {} for outer_key in outer_keys}
+            config["delimeter"] = " "
             config["squeue_opts"] = {
                 "polling_interval": 10,
                 "getopts": None,
@@ -73,6 +74,7 @@ def main():
         sinfo_getopts=config["sinfo_opts"]["getopts"],
         sinfo_formopts=config["sinfo_opts"]["formopts"],
         detail_formopts=config["detail_opts"]["formopts"],
+        delimeter=config["delimeter"],
     )
     tui = Tui(inspector, **config["tui_opts"])
     tui.start()
