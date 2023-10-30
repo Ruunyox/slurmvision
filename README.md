@@ -39,11 +39,10 @@ squeue_opts:
 sinfo_opts:
   getopts: null
   formopts:
-    "-o": "%10P %5c %5a %10l %20G %4D %6t"
+    "--Format": "PartitionName:|||,Time:|||,CPUs:|||,Memory:|||,Gres:|||,StateCompact:"
 detail_opts:
   formopts:
-          "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,Reason:|||,cpus-per- task:|||,Partition:|||,TimeUsed:|||,TimeLeft:|||,SubmitTime:|||,StartTime:|||,STDOUT:|||,WorkDi
-r:|||,ClusterFeature:|||,Feature:|||,GroupName:|||,NumCPUs:|||,NumNodes:|||,NodeList:"
+          "--Format": "JobId:|||,UserName:|||,Name:|||,STATE:|||,Reason:|||,cpus-per-task:|||,Partition:|||,TimeUsed:|||,TimeLeft:|||,SubmitTime:|||,StartTime:|||,STDOUT:|||,WorkDir:|||,ClusterFeature:|||,Feature:|||,GroupName:|||,NumCPUs:|||,NumNodes:|||,NodeList:"
 tui_opts:
   select_advance: true
   my_jobs_first: true
