@@ -3,7 +3,7 @@ import urwid
 from urwid.command_map import ACTIVATE
 from copy import deepcopy
 import os
-from .widgets import SelectableColumns
+from .widgets import SelectableColumns, TailText
 from ..slurm import Inspector, SlurmThread
 
 default_palette = {
@@ -14,7 +14,7 @@ default_palette = {
     "warning": ("warning", "white", "dark red"),
     "help": ("help", "black", "yellow"),
     "detail": ("detail", "black", "white"),
-    "tail": ("tail", "black", "white"),
+    "tail": ("tail", "white", "dark green"),
     "error": ("error", "dark red", "white"),
     "focus": ("focus", "dark blue", ""),
 }
@@ -82,7 +82,7 @@ class Tui(object):
         else:
             self.palette = [val for val in default_palette.values()]
 
-        self.num_tail_lines = 10
+        self.num_tail_lines = 8
         self.tail_sleep = 1
         self.inspector = inspector
         self.selected_jobs = set()
@@ -178,7 +178,7 @@ class Tui(object):
         current_focus = self.top.body.original_widget.original_widget.body.focus
         row = self.top.body.original_widget.original_widget.body[current_focus]
         job_id = row.original_widget.job_id
-        file_path = self.inspector.get_job_details(job_id)["STDOUT"]
+        file_path = self.inspector.get_job_details(job_id).attrs["STDOUT"]
         self._tail_box(file_path)
 
     def _scancel_check(self):
@@ -262,31 +262,32 @@ class Tui(object):
         """Creates temporary Help overlay displaying
         command keystrokes for using the TUI.
         """
-        ok = urwid.Button("OK")
-        urwid.connect_signal(ok, "click", self._return_to_top)
+        if not isinstance(self.loop.widget, urwid.Overlay):
+            ok = urwid.Button("OK")
+            urwid.connect_signal(ok, "click", self._return_to_top)
 
-        help_text = [urwid.Divider()]
-        for s in Tui._help_strs:
-            help_text.append(urwid.Padding(urwid.Text(s), left=3, right=3))
-        help_text.append(urwid.Divider())
-        help_text.append(ok)
+            help_text = [urwid.Divider()]
+            for s in Tui._help_strs:
+                help_text.append(urwid.Padding(urwid.Text(s), left=3, right=3))
+            help_text.append(urwid.Divider())
+            help_text.append(ok)
 
-        help_pile = urwid.Pile(help_text)
-        help_box = urwid.AttrMap(
-            urwid.LineBox(help_pile, title="Help", **Tui._box_style_kwargs),
-            "help",
-            None,
-        )
+            help_pile = urwid.Pile(help_text)
+            help_box = urwid.AttrMap(
+                urwid.LineBox(help_pile, title="Help", **Tui._box_style_kwargs),
+                "help",
+                None,
+            )
 
-        w = urwid.Overlay(
-            urwid.AttrMap(urwid.Filler(help_box), "standard", None),
-            self.top,
-            align="center",
-            width=("relative", 60),
-            valign="middle",
-            height=len(help_text) + 4,
-        )
-        self.loop.widget = w
+            w = urwid.Overlay(
+                urwid.AttrMap(urwid.Filler(help_box), "standard", None),
+                self.top,
+                align="center",
+                width=("relative", 60),
+                valign="middle",
+                height=len(help_text) + 4,
+            )
+            self.loop.widget = w
 
     def _info_box(self, str_pairs: Dict[str, str]):
         """Displays an information box given a mapping of attributes
@@ -298,36 +299,43 @@ class Tui(object):
             Dictionary of field/values string pairs concerning
             specified job detail attributes.
         """
+        if not isinstance(self.loop.widget, urwid.Overlay):
+            ok = urwid.Button("OK")
+            urwid.connect_signal(ok, "click", self._return_to_top)
 
-        ok = urwid.Button("OK")
-        urwid.connect_signal(ok, "click", self._return_to_top)
+            infos = []
+            for key, value in str_pairs.items():
+                infos.append(
+                    urwid.Padding(urwid.Text(f"{key} : {value}"), right=3, left=3)
+                )
 
-        infos = []
-        for key, value in str_pairs.items():
-            infos.append(urwid.Padding(urwid.Text(f"{key} : {value}"), right=3, left=3))
+            info_walker = urwid.SimpleListWalker(infos)
+            info_list = urwid.BoxAdapter(urwid.ListBox(info_walker), height=len(infos))
+            info_pile = urwid.Pile([info_list, urwid.Divider(), ok])
 
-        info_walker = urwid.SimpleListWalker(infos)
-        info_list = urwid.BoxAdapter(urwid.ListBox(info_walker), height=len(infos))
-        info_pile = urwid.Pile([info_list, urwid.Divider(), ok])
+            info_box = urwid.AttrMap(
+                urwid.LineBox(info_pile, title="Job Detail", **Tui._box_style_kwargs),
+                "detail",
+                None,
+            )
 
-        info_box = urwid.AttrMap(
-            urwid.LineBox(info_pile, title="Job Detail", **Tui._box_style_kwargs),
-            "detail",
-            None,
-        )
-
-        w = urwid.Overlay(
-            urwid.AttrMap(urwid.Filler(info_box), "standard", None),
-            self.top,
-            align="center",
-            width=("relative", 60),
-            valign="middle",
-            height=len(infos) + 4,
-        )
-        self.loop.widget = w
+            w = urwid.Overlay(
+                urwid.AttrMap(urwid.Filler(info_box), "standard", None),
+                self.top,
+                align="center",
+                width=("relative", 80),
+                valign="middle",
+                height=len(infos) + 4,
+            )
+            self.loop.widget = w
 
     def _tail_refresh(self, *args):
-        self.loop.widget.original_widget.original_widget.original_widget.original_widget.refresh()
+        # Grab the top (-1) widget of the Overlay
+        self.loop.widget.contents[1][
+            0
+        ].original_widget.original_widget.original_widget.original_widget.contents[0][
+            0
+        ].refresh()
         self.tail_handle = self.loop.set_alarm_in(
             sec=self.tail_sleep, callback=self._tail_refresh
         )
@@ -341,30 +349,30 @@ class Tui(object):
             Dictionary of field/values string pairs concerning
             specified job detail attributes.
         """
+        if not isinstance(self.loop.widget, urwid.Overlay):
+            ok = urwid.Button("OK")
+            urwid.connect_signal(ok, "click", self._return_to_top)
 
-        ok = urwid.Button("OK")
-        urwid.connect_signal(ok, "click", self._return_to_top)
+            tail_text = TailText(file_path, self.num_tail_lines)
+            tail_pile = urwid.Pile([tail_text, urwid.Divider(), ok])
+            tail_box = urwid.AttrMap(
+                urwid.LineBox(tail_pile, title="Job Output", **Tui._box_style_kwargs),
+                "tail",
+                None,
+            )
 
-        tail_text = TailText(file_path, self.num_tail_lines)
-
-        tail_box = urwid.AttrMap(
-            urwid.LineBox(tail_text, title="Job Output", **Tui._box_style_kwargs),
-            "tail",
-            None,
-        )
-
-        w = urwid.Overlay(
-            urwid.AttrMap(urwid.Filler(tail_box), "standard", None),
-            self.top,
-            align="center",
-            width=("relative", 60),
-            valign="middle",
-            height=self.num_tail_lines + 4,
-        )
-        self.loop.widget = w
-        self.tail_handle = self.loop.set_alarm_in(
-            sec=self.tail_sleep, callback=self._tail_refresh
-        )
+            w = urwid.Overlay(
+                urwid.AttrMap(urwid.Filler(tail_box), "standard", None),
+                self.top,
+                align="center",
+                width=("relative", 80),
+                valign="middle",
+                height=self.num_tail_lines + 4,
+            )
+            self.loop.widget = w
+            self.tail_handle = self.loop.set_alarm_in(
+                sec=self.tail_sleep, callback=self._tail_refresh
+            )
 
     def _error_box(self, error_msg: str):
         """Displays a temporary error message

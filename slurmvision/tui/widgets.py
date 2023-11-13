@@ -42,11 +42,10 @@ class TailText(urwid.Text):
     """
 
     def __init__(self, file_path, num_lines: int = 10):
-
         self.file_path = file_path
         self.num_lines = num_lines
         stdout = TailText._read_lines(self.file_path, self.num_lines)
-        super(TailText, self).__init__(stdout)
+        super(TailText, self).__init__(stdout, wrap="ellipsis")
 
     @staticmethod
     def _read_lines(file_path, num_lines) -> str:
