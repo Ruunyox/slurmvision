@@ -53,9 +53,10 @@ class Tui(object):
         "j           ->   View jobs",
         "c           ->   Deselect all currently selected jobs",
         "d           ->   Detailed view of currently highlighted job",
+        "t           ->   Tail ouput for the currently highlighed job",
         "/           ->   Global search",
         "bksp        ->   Cancel selected jobs",
-        "tab         ->   Refocus to job panel",
+        "tab         ->   Refocus to job panel/leave search box",
         "q           ->   Quit",
     ]
 
@@ -283,9 +284,13 @@ class Tui(object):
                 urwid.AttrMap(urwid.Filler(help_box), "standard", None),
                 self.top,
                 align="center",
-                width=("relative", 60),
+                width=("relative", 80),
                 valign="middle",
                 height=len(help_text) + 4,
+                top=2,
+                bottom=2,
+                left=2,
+                right=2,
             )
             self.loop.widget = w
 
@@ -326,6 +331,10 @@ class Tui(object):
                 width=("relative", 80),
                 valign="middle",
                 height=len(infos) + 4,
+                top=2,
+                bottom=2,
+                left=2,
+                right=2,
             )
             self.loop.widget = w
 
@@ -367,7 +376,11 @@ class Tui(object):
                 align="center",
                 width=("relative", 80),
                 valign="middle",
-                height=self.num_tail_lines + 4,
+                height=self.num_tail_lines + 8,
+                top=2,
+                bottom=2,
+                left=2,
+                right=2,
             )
             self.loop.widget = w
             self.tail_handle = self.loop.set_alarm_in(
