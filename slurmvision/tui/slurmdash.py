@@ -14,6 +14,7 @@ default_palette = {
     "warning": ("warning", "white", "dark red"),
     "help": ("help", "black", "yellow"),
     "detail": ("detail", "black", "white"),
+    "tail": ("tail", "black", "white"),
     "error": ("error", "dark red", "white"),
     "focus": ("focus", "dark blue", ""),
 }
@@ -81,6 +82,8 @@ class Tui(object):
         else:
             self.palette = [val for val in default_palette.values()]
 
+        self.num_tail_lines = 10
+        self.tail_sleep = 1
         self.inspector = inspector
         self.selected_jobs = set()
         self.my_jobs_first = my_jobs_first
@@ -99,6 +102,7 @@ class Tui(object):
         self.handle = self.loop.set_alarm_in(
             sec=self.inspector.polling_interval, callback=self.update_top
         )
+        self.tail_handle = None
 
     def start(self):
         """Creates and starts the polling thread as well as the TUI main loop"""
@@ -144,6 +148,9 @@ class Tui(object):
         if key in ("D", "d"):
             if self.view == "squeue":
                 self._inspect_detail()
+        if key in ("T", "t"):
+            if self.view == "squeue":
+                self._inspect_tail()
         if key == "/":
             if self.view == "squeue":
                 self._enter_search()
@@ -163,6 +170,16 @@ class Tui(object):
         job_id = row.original_widget.job_id
         detail_info = self.inspector.get_job_details(job_id)
         self._info_box(detail_info.attrs)
+
+    def _inspect_tail(self):
+        """Creates a pop-up with tailbox for the slurm output of the currently
+        highlighted job
+        """
+        current_focus = self.top.body.original_widget.original_widget.body.focus
+        row = self.top.body.original_widget.original_widget.body[current_focus]
+        job_id = row.original_widget.job_id
+        file_path = self.inspector.get_job_details(job_id)["STDOUT"]
+        self._tail_box(file_path)
 
     def _scancel_check(self):
         """Prompts the user with yes/no prompt to cancel selected jobs"""
@@ -195,6 +212,9 @@ class Tui(object):
 
     def _return_to_top(self, *args):
         """Removes any currently overlaid widgets and returns to the TUI urwid.Frame widget"""
+        if self.tail_handle is not None:
+            self.loop.remove_alarm(self.tail_handle)
+            self.tail_handle = None
         self.loop.widget = self.top
 
     def _toggle_my_jobs(self):
@@ -305,6 +325,46 @@ class Tui(object):
             height=len(infos) + 4,
         )
         self.loop.widget = w
+
+    def _tail_refresh(self, *args):
+        self.loop.widget.original_widget.original_widget.original_widget.original_widget.refresh()
+        self.tail_handle = self.loop.set_alarm_in(
+            sec=self.tail_sleep, callback=self._tail_refresh
+        )
+
+    def _tail_box(self, file_path: str):
+        """Displays tail box for STDOUT of selected job
+
+        Parameters
+        ----------
+        str:
+            Dictionary of field/values string pairs concerning
+            specified job detail attributes.
+        """
+
+        ok = urwid.Button("OK")
+        urwid.connect_signal(ok, "click", self._return_to_top)
+
+        tail_text = TailText(file_path, self.num_tail_lines)
+
+        tail_box = urwid.AttrMap(
+            urwid.LineBox(tail_text, title="Job Output", **Tui._box_style_kwargs),
+            "tail",
+            None,
+        )
+
+        w = urwid.Overlay(
+            urwid.AttrMap(urwid.Filler(tail_box), "standard", None),
+            self.top,
+            align="center",
+            width=("relative", 60),
+            valign="middle",
+            height=self.num_tail_lines + 4,
+        )
+        self.loop.widget = w
+        self.tail_handle = self.loop.set_alarm_in(
+            sec=self.tail_sleep, callback=self._tail_refresh
+        )
 
     def _error_box(self, error_msg: str):
         """Displays a temporary error message
